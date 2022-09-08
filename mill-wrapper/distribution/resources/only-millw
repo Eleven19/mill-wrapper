@@ -23,14 +23,14 @@
 #
 # Optional ENV vars
 # -----------------
-#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
-#   MVNW_REPOURL - repo url base for downloading maven distribution
-#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
-#   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+#   JAVA_HOME - location of a JDK home dir, required when download mill via java source
+#   MILLW_REPOURL - repo url base for downloading mill distribution
+#   MILLW_USERNAME/MILLW_PASSWORD - user and password for downloading mill
+#   MILLW_VERBOSE - true: enable verbose log; debug: trace the millw script; others: silence the output
 # ----------------------------------------------------------------------------
 
 set -euf
-[ "${MVNW_VERBOSE-}" != debug ] || set -x
+[ "${MILLW_VERBOSE-}" != debug ] || set -x
 
 # OS specific support.
 native_path() { printf %s\\n "$1"; }
@@ -52,7 +52,7 @@ set_java_home() {
       JAVACCMD="$JAVA_HOME/bin/javac"
 
       if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ] ; then
-        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+        echo "The JAVA_HOME environment variable is not defined correctly, so millw cannot run." >&2
         echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
         return 1
       fi
@@ -62,7 +62,7 @@ set_java_home() {
     JAVACCMD="$('set' +e; 'unset' -f command 2>/dev/null; 'command' -v javac)" || :
 
     if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ] ; then
-      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so millw cannot run." >&2
       return 1
     fi
   fi
@@ -79,30 +79,41 @@ hash_string() {
 }
 
 verbose() { :; }
-[ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+[ "${MILLW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
 
 die() {
   printf %s\\n "$1" >&2
   exit 1
 }
 
-# calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+# set the version of Scala used by mill
+if [-n "${MILL_SCALA_VERSION}" ]; then
+    MILL_SCALA_VERSION="2.13"
+fi
+
+MILL_REPO_ARTIFACT_NAME="mill-dev_${MILL_SCALA_VERSION}"
+
+get_mill_artifact_name() {
+  "mill_${MILL_SCALA_VERSION:-2.13}-${1:-dev}"
+}
+
+# calculate distributionUrl, requires .config/.mill/wrapper/mill-wrapper.properties
 while IFS="=" read -r key value; do
   case "$key" in (distributionUrl) distributionUrl="${value:-$distributionUrl}"; break ;; esac
-done < "${0%/*}/.mvn/wrapper/maven-wrapper.properties"
-[ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
-[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL/org/apache/maven/${distributionUrl#*/org/apache/maven/}"
+done < "${0%/*}/.config/mill/wrapper/mill-wrapper.properties"
+[ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.config/mill/wrapper/mill-wrapper.properties"
+[ -z "${MILLW_REPOURL-}" ] || distributionUrl="$MILLW_REPOURL/com/lihaoyi/$MILL_REPO_ARTIFACT_NAME/${distributionUrl#*/org/apache/mill/}"
 
-# calculate MAVEN_HOME, pattern ~/.m2/wrapper/dists/apache-maven-<version>/<hash>
+# calculate MILL_HOME, pattern ~/.m2/wrapper/dists/apache-mill-<version>/<hash>
 distributionUrlName="${distributionUrl##*/}"
 distributionUrlNameMain="${distributionUrlName%-bin.*}"
-MAVEN_HOME="$HOME/.m2/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
-MVN_CMD="mvn${0##*/mvnw}"
+MILL_HOME="$HOME/.m2/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+MILL_CMD="mill${0##*/millw}"
 
-if [ -d "$MAVEN_HOME" ]; then
-  verbose "found existing MAVEN_HOME at $MAVEN_HOME"
-  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL
-  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "MAVEN_HOME is not valid: cannot exec $MAVEN_HOME/bin/mvn"
+if [ -d "$MILL_HOME" ]; then
+  verbose "found existing MILL_HOME at $MILL_HOME"
+  unset MILLW_VERBOSE MILLW_USERNAME MILLW_PASSWORD MILLW_REPOURL
+  exec "$MILL_HOME/bin/$MILL_CMD" "$@" || die "MILL_HOME is not valid: cannot exec $MILL_HOME/bin/mill"
 fi
 
 case "${distributionUrl-}" in
@@ -118,10 +129,10 @@ else
   die "cannot create temp dir"
 fi
 
-mkdir -p -- "${MAVEN_HOME%/*}"
+mkdir -p -- "${MILL_HOME%/*}"
 
 # Download and Install Apache Maven
-verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+verbose "Couldn't find MILL_HOME, downloading and installing it ..."
 verbose "Downloading from: $distributionUrl"
 verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
 
@@ -132,21 +143,21 @@ if ! command -v unzip >/dev/null; then
 fi
 
 # verbose opt
-__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
-[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+__MILLW_QUIET_WGET=--quiet __MILLW_QUIET_CURL=--silent __MILLW_QUIET_UNZIP=-q __MILLW_QUIET_TAR=''
+[ "${MILLW_VERBOSE-}" != true ] || __MILLW_QUIET_WGET='' __MILLW_QUIET_CURL='' __MILLW_QUIET_UNZIP='' __MILLW_QUIET_TAR=v
 
 # normalize http auth
-case "${MVNW_PASSWORD:+has-password}" in
-'') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
-has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+case "${MILLW_PASSWORD:+has-password}" in
+'') MILLW_USERNAME='' MILLW_PASSWORD='' ;;
+has-password) [ -n "${MILLW_USERNAME-}" ] || MILLW_USERNAME='' MILLW_PASSWORD='' ;;
 esac
 
-if [ -z "${MVNW_USERNAME-}" ] && command -v wget > /dev/null; then
+if [ -z "${MILLW_USERNAME-}" ] && command -v wget > /dev/null; then
   verbose "Found wget ... using wget"
-  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName"
-elif [ -z "${MVNW_USERNAME-}" ] && command -v curl > /dev/null; then
+  wget ${__MILLW_QUIET_WGET:+"$__MILLW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName"
+elif [ -z "${MILLW_USERNAME-}" ] && command -v curl > /dev/null; then
   verbose "Found curl ... using curl"
-  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl"
+  curl ${__MILLW_QUIET_CURL:+"$__MILLW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl"
 elif set_java_home; then
   verbose "Falling back to use Java to download"
   javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
@@ -156,7 +167,7 @@ elif set_java_home; then
 	{
 	  protected java.net.PasswordAuthentication getPasswordAuthentication()
 	  {
-	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+	    return new java.net.PasswordAuthentication( System.getenv( "MILLW_USERNAME" ), System.getenv( "MILLW_PASSWORD" ).toCharArray() );
 	  }
 	  public static void main( String[] args ) throws Exception
 	  {
@@ -174,13 +185,13 @@ fi
 
 # unzip and move
 if command -v unzip > /dev/null; then
-  unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR"
+  unzip ${__MILLW_QUIET_UNZIP:+"$__MILLW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR"
 else
-  tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR"
+  tar xzf${__MILLW_QUIET_TAR:+"$__MILLW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR"
 fi
-printf %s\\n "$distributionUrl" > "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/mvnw.url"
-mv -- "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
+printf %s\\n "$distributionUrl" > "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/millw.url"
+mv -- "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" "$MILL_HOME" || [ -d "$MILL_HOME" ] || die "fail to move MILL_HOME"
 
 clean || :
-unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-exec "$MAVEN_HOME/bin/$MVN_CMD" "$@"
+unset MILLW_VERBOSE MILLW_USERNAME MILLW_PASSWORD MILLW_REPOURL || :
+exec "$MILL_HOME/bin/$MILL_CMD" "$@"
