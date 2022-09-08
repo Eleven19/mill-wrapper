@@ -3,7 +3,7 @@ import $exec.plugins
 import mill.eval.Evaluator
 import $ivy.`org.scalameta::munit:1.0.0-M6`
 import munit.Assertions._
-import com.damianreeves.mill.wrapper.Wrapper
+import io.eleven19.mill.wrapper.Wrapper
 
 object minimal extends ScalaModule {
   def scalaVersion = "2.13.8"

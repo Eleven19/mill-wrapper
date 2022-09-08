@@ -1,4 +1,4 @@
-package com.damianreeves.mill.wrapper
+package io.eleven19.mill.wrapper
 import zio.test.*
 object MillWrapperDownloaderSpec extends ZIOSpecDefault:
   def spec = suite("MillWrapperDownloaderSpec")(

@@ -1,4 +1,4 @@
-package com.damianreeves.mill.wrapper
+package io.eleven19.mill.wrapper
 import mill._
 import mill.define.ExternalModule
 import mill.eval.Evaluator

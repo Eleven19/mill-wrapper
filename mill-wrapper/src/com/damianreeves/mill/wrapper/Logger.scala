@@ -1,4 +1,4 @@
-package com.damianreeves.mill.wrapper
+package io.eleven19.mill.wrapper
 
 object Logger:
   val verbose: Boolean =

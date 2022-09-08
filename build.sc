@@ -95,8 +95,8 @@ trait ReleaseModule extends CiReleaseModule {
 
   override def pomSettings = PomSettings(
     description = pomDescription,
-    organization = "com.damianreeves",
-    url = "https://github.com/DamianReeves/mill-wrapper",
+    organization = "io.eleven19",
+    url = "https://github.com/Eleven19/mill-wrapper",
     licenses = Seq(License.`Apache-2.0`),
     versionControl = VersionControl
       .github(owner = "DamianReeves", repo = "mill-wrapper"),
