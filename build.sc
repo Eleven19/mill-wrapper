@@ -33,15 +33,10 @@ object `mill-wrapper` extends ScalaModule with ReleaseModule {
     override def pomDescription: String =
       "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
 
-    object itest extends ScalaModule with TestModule {
-      def scalaVersion: T[String] = wrapperScalaVersion
-      def ivyDeps = super.ivyDeps() ++ Agg(
-        ivy"dev.zio::zio-test::2.0.1",
-        ivy"dev.zio::zio-test-sbt::2.0.1"
-      )
-      def testFramework = "zio.test.sbt.ZTestFramework"
-    }
+    object itest extends CommonTestModule {}
   }
+
+  object test extends CommonTestModule {}
 }
 
 object plugin
@@ -113,4 +108,13 @@ trait ReleaseModule extends CiReleaseModule {
       )
     )
   )
+}
+
+trait CommonTestModule extends ScalaModule with TestModule {
+  def scalaVersion: T[String] = wrapperScalaVersion
+  def ivyDeps = super.ivyDeps() ++ Agg(
+    ivy"dev.zio::zio-test::2.0.1",
+    ivy"dev.zio::zio-test-sbt::2.0.1"
+  )
+  def testFramework = "zio.test.sbt.ZTestFramework"
 }
