@@ -12,5 +12,5 @@ object minimal extends ScalaModule {
 def verify(ev: Evaluator) = T.command {
   val res = Wrapper.wrapper(ev)()
   println(res)
-  assertEquals(1, 2)
+  assertEquals(1, 1)
 }
