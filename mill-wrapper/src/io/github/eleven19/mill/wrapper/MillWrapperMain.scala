@@ -16,8 +16,8 @@ object MillWrapperMain extends ZIOAppDefault:
   final val MILLW_PASSWORD: String = "MILLW_PASSWORD"
   final val MILLW_REPOURL: String = "MILLW_REPOURL"
 
-  val addSimpleLogger:ZLayer[Any, Nothing, Unit] =
-    Runtime.addLogger((_,_,level, message:() => Any, _,_,_,_) => println(s"[${level.label}] ${message()}"))
+  val addSimpleLogger: ZLayer[Any, Nothing, Unit] =
+    Runtime.addLogger((_, _, level, message: () => Any, _, _, _, _) => println(s"[${level.label}] ${message()}"))
 
   override val bootstrap: ZLayer[Any, Nothing, Any] =
     Runtime.removeDefaultLoggers ++ addSimpleLogger
@@ -28,19 +28,20 @@ object MillWrapperMain extends ZIOAppDefault:
       _ <- ZIO.logInfo(s"Mill Wrapper $wrapperVersion")
     } yield ()
 
-  lazy val wrapperJar:Task[Path] =
-    val getLocation:Task[URI] = ZIO.attempt(MillWrapperMain.getClass.getProtectionDomain.getCodeSource.getLocation.toURI).refineOrDie {
-      case e: URISyntaxException => new RuntimeException(e)
-    }
+  lazy val wrapperJar: Task[Path] =
+    val getLocation: Task[URI] =
+      ZIO.attempt(MillWrapperMain.getClass.getProtectionDomain.getCodeSource.getLocation.toURI).refineOrDie {
+        case e: URISyntaxException => new RuntimeException(e)
+      }
 
-    getLocation.flatMap{location =>
-      if(!"file".equals(location.getScheme))
+    getLocation.flatMap { location =>
+      if (!"file".equals(location.getScheme))
         ZIO.fail(new RuntimeException(s"Cannot determine classpath for wrapper Jar from codebase '$location'."))
       ZIO.succeed(Paths.get(location))
     }
-  def wrapperVersion:String = MillWrapperBuildInfo.version
+  def wrapperVersion: String = MillWrapperBuildInfo.version
 
-  private[wrapper] def rootDir(wrapperJar:Path) =
+  private[wrapper] def rootDir(wrapperJar: Path) =
     wrapperJar.getParent.getParent.getParent
 
   private[wrapper] lazy val millUserHome: Task[Path] =
