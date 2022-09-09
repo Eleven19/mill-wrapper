@@ -1,16 +1,16 @@
-import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.2.0`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.1`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
+import $ivy.`com.lihaoyi::mill-contrib-buildinfo:$MILL_VERSION`
 
 import mill._
+import mill.contrib.buildinfo.BuildInfo
 import mill.scalalib._
 import mill.scalalib.scalafmt._
 import mill.scalalib.publish._
 import mill.scalalib.api.ZincWorkerUtil
 import mill.scalalib.api.Util.scalaNativeBinaryVersion
 
-import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import de.tobiasroeser.mill.integrationtest._
 import io.kipp.mill.ci.release.CiReleaseModule
@@ -24,28 +24,27 @@ def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
 )
 
-object `mill-wrapper` extends ScalaModule with ScalafmtModule with ScalafixModule with ReleaseModule {
+object `mill-wrapper` extends WrapperScalaModule with ReleaseModule {
+  def buildInfoObjectName = "MillWrapperBuildInfo"
   def scalaVersion = wrapperScalaVersion
   override def pomDescription: String =
     "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
+  def ivyDeps = super.ivyDeps() ++ Agg(V.dev.zio.zio)
 
   object distribution extends JavaModule with ReleaseModule {
     override def pomDescription: String =
       "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
 
-    object itest extends CommonTestModule {}
+    // object itest extends Tests with CommonTestModule {}
   }
 
-  object test extends CommonTestModule {}
+  object test extends Tests with CommonTestModule {}
 }
 
-object plugin
-    extends ScalaModule
-    with ReleaseModule
-    with ScalafixModule
-    with ScalafmtModule {
+object plugin extends WrapperScalaModule with ReleaseModule {
 
   override def scalaVersion = scala213
+  def buildInfoObjectName = "MillWrapperPluginBuildInfo"
 
   override def artifactName =
     s"${pluginName}_mill${millBinaryVersion(millVersion)}"
@@ -63,12 +62,6 @@ object plugin
   // )
   override def scalacOptions = Seq("-Ywarn-unused", "-deprecation")
 
-  override def scalafixScalaBinaryVersion =
-    ZincWorkerUtil.scalaBinaryVersion(scala213)
-
-  override def scalafixIvyDeps = Agg(
-    ivy"com.github.liancheng::organize-imports:0.6.0"
-  )
 }
 
 object itest extends MillIntegrationTestModule {
@@ -110,11 +103,35 @@ trait ReleaseModule extends CiReleaseModule {
   )
 }
 
-trait CommonTestModule extends ScalaModule with TestModule {
-  def scalaVersion: T[String] = wrapperScalaVersion
+trait WrapperScalaModule extends ScalaModule with ScalafmtModule with BuildInfo {
+  def ivyDeps = super.ivyDeps() ++ Agg(V.com.lihaoyi.sourceCode)
+  def buildInfoMembers = T {
+    Map("scalaVersion" -> scalaVersion(), "version" -> VcsVersion.vcsState().format())
+  }
+  def buildInfoPackageName:Option[String] = Some("io.github.eleven19.mill.wrapper")
+}
+
+trait CommonTestModule extends TestModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"dev.zio::zio-test::2.0.1",
-    ivy"dev.zio::zio-test-sbt::2.0.1"
+    ivy"dev.zio::zio-test::2.0.2",
+    ivy"dev.zio::zio-test-sbt::2.0.2",
+    ivy"dev.zio::zio-test-magnolia::2.0.2"
   )
   def testFramework = "zio.test.sbt.ZTestFramework"
+}
+
+object V {
+
+  final case object com {
+    final case object lihaoyi {
+      val sourceCode = ivy"com.lihaoyi::sourcecode:0.3.0"
+    }
+  }
+  final case object dev {
+    final case object zio {
+      val Version = "2.0.2"
+      val zio = ivy"dev.zio::zio::$Version"
+
+    }
+  }
 }
