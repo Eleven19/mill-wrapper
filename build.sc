@@ -24,7 +24,7 @@ def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
 )
 
-object `mill-wrapper` extends ScalaModule with ScalafmtModule with ScalafixModule with ReleaseModule {
+object `mill-wrapper` extends WrapperScalaModule with ReleaseModule {
   def scalaVersion = wrapperScalaVersion
   override def pomDescription: String =
     "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
@@ -34,13 +34,13 @@ object `mill-wrapper` extends ScalaModule with ScalafmtModule with ScalafixModul
     override def pomDescription: String =
       "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
 
-    object itest extends Tests with CommonTestModule {}
+    // object itest extends Tests with CommonTestModule {}
   }
 
   object test extends Tests with CommonTestModule {}
 }
 
-object plugin extends ScalaModule with ReleaseModule with ScalafixModule with ScalafmtModule {
+object plugin extends WrapperScalaModule with ReleaseModule {
 
   override def scalaVersion = scala213
 
@@ -60,12 +60,6 @@ object plugin extends ScalaModule with ReleaseModule with ScalafixModule with Sc
   // )
   override def scalacOptions = Seq("-Ywarn-unused", "-deprecation")
 
-  override def scalafixScalaBinaryVersion =
-    ZincWorkerUtil.scalaBinaryVersion(scala213)
-
-  override def scalafixIvyDeps = Agg(
-    ivy"com.github.liancheng::organize-imports:0.6.0"
-  )
 }
 
 object itest extends MillIntegrationTestModule {
@@ -104,6 +98,15 @@ trait ReleaseModule extends CiReleaseModule {
         "https://github.com/DamianReeves"
       )
     )
+  )
+}
+
+trait WrapperScalaModule extends ScalaModule with ScalafmtModule with ScalafixModule {
+
+  override def scalafixScalaBinaryVersion =
+    ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
+  override def scalafixIvyDeps = Agg(
+    ivy"com.github.liancheng::organize-imports::0.6.0"
   )
 }
 

@@ -1,10 +1,11 @@
 package io.github.eleven19.mill.wrapper
 
+import zio._
 import java.nio.file.{Paths, Path}
 
 class MillWrapperMain
 
-object MillWrapperMain:
+object MillWrapperMain extends ZIOAppDefault:
   final val DEFAULT_MILL_USER_HOME = Paths.get(sys.props("user.home")).resolve(".mill")
   final val MILL_USER_HOME_PROPERTY_KEY = "mill.user.home"
   final val MILL_USER_HOME_ENV_KEY: String = "MILL_USER_HOME"
@@ -12,10 +13,13 @@ object MillWrapperMain:
   final val MILLW_USERNAME: String = "MILLW_USERNAME"
   final val MILLW_PASSWORD: String = "MILLW_PASSWORD"
   final val MILLW_REPOURL: String = "MILLW_REPOURL"
-  def main(args: Array[String]): Unit = ()
+  def run = millUserHome
 
-  private[wrapper] def millUserHome: Path =
-    sys.props
-      .get(MILL_USER_HOME_PROPERTY_KEY)
-      .orElse(sys.props.get(MILL_USER_HOME_ENV_KEY))
-      .fold(DEFAULT_MILL_USER_HOME)(Paths.get(_))
+  private[wrapper] def millUserHome: Task[Path] =
+    System
+      .property(MILL_USER_HOME_PROPERTY_KEY)
+      .flatMap {
+        case None => System.env(MILL_USER_HOME_ENV_KEY)
+        case v    => ZIO.succeed(v)
+      }
+      .map(home => home.fold(DEFAULT_MILL_USER_HOME)(Paths.get(_)))
