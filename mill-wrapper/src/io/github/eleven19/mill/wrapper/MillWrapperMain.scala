@@ -52,12 +52,3 @@ object MillWrapperMain extends ZIOAppDefault:
         case v    => ZIO.succeed(v)
       }
       .map(home => home.fold(DEFAULT_MILL_USER_HOME)(Paths.get(_)))
-
-  private[wrapper] lazy val millUserHome: Task[Path] =
-    System
-      .property(MILL_USER_HOME_PROPERTY_KEY)
-      .flatMap {
-        case None => System.env(MILL_USER_HOME_ENV_KEY)
-        case v    => ZIO.succeed(v)
-      }
-      .map(home => home.fold(DEFAULT_MILL_USER_HOME)(Paths.get(_)))
