@@ -24,7 +24,7 @@ def millBinaryVersion(millVersion: String) = scalaNativeBinaryVersion(
   millVersion
 )
 
-object `mill-wrapper` extends ScalaModule with ReleaseModule {
+object `mill-wrapper` extends ScalaModule with ScalafmtModule with ScalafixModule with ReleaseModule {
   def scalaVersion = wrapperScalaVersion
   override def pomDescription: String =
     "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
@@ -95,7 +95,7 @@ trait ReleaseModule extends CiReleaseModule {
 
   override def pomSettings = PomSettings(
     description = pomDescription,
-    organization = "io.eleven19",
+    organization = "io.github.eleven19",
     url = "https://github.com/Eleven19/mill-wrapper",
     licenses = Seq(License.`Apache-2.0`),
     versionControl = VersionControl

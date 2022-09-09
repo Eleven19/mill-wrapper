@@ -1,4 +1,5 @@
-package io.eleven19.mill.wrapper
+package io.github.eleven19.mill.wrapper
+
 import java.net.URI
 import java.nio.file.Path
 import java.net.Authenticator
