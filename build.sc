@@ -105,9 +105,14 @@ trait WrapperScalaModule extends ScalaModule with ScalafmtModule with ScalafixMo
 
   override def scalafixScalaBinaryVersion =
     ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
-  override def scalafixIvyDeps = Agg(
-    ivy"com.github.liancheng::organize-imports::0.6.0"
-  )
+  override def scalafixIvyDeps = super.scalafixIvyDeps() ++ {
+    scalaVersion() match {
+      case "3.0.0" =>
+        Agg()
+      case _ => Agg(ivy"com.github.liancheng::organize-imports::0.6.0")
+    }
+
+  }
 }
 
 trait CommonTestModule extends TestModule {
