@@ -1,4 +1,3 @@
-import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.2.0`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.1`
 import $ivy.`de.tototec::de.tobiasroeser.mill.integrationtest::0.6.1`
@@ -10,7 +9,6 @@ import mill.scalalib.publish._
 import mill.scalalib.api.ZincWorkerUtil
 import mill.scalalib.api.Util.scalaNativeBinaryVersion
 
-import com.goyeau.mill.scalafix.ScalafixModule
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import de.tobiasroeser.mill.integrationtest._
 import io.kipp.mill.ci.release.CiReleaseModule
@@ -101,18 +99,8 @@ trait ReleaseModule extends CiReleaseModule {
   )
 }
 
-trait WrapperScalaModule extends ScalaModule with ScalafmtModule with ScalafixModule {
+trait WrapperScalaModule extends ScalaModule with ScalafmtModule {
 
-  override def scalafixScalaBinaryVersion =
-    ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
-  override def scalafixIvyDeps = super.scalafixIvyDeps() ++ {
-    scalaVersion() match {
-      case "3.0.0" =>
-        Agg()
-      case _ => Agg(ivy"com.github.liancheng::organize-imports::0.6.0")
-    }
-
-  }
 }
 
 trait CommonTestModule extends TestModule {

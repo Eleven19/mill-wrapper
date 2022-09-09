@@ -25,9 +25,6 @@ jobs:
     - name: Check formatting
       run: 
         ./mill -i __.checkFormat
-    - name: Check scalafix
-      run: 
-        ./mill -i __.fix --check
 
   test:
     runs-on: 'ubuntu-latest'
