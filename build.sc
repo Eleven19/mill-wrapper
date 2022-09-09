@@ -28,22 +28,19 @@ object `mill-wrapper` extends ScalaModule with ScalafmtModule with ScalafixModul
   def scalaVersion = wrapperScalaVersion
   override def pomDescription: String =
     "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
+  def ivyDeps = Agg(V.dev.zio.zio)
 
   object distribution extends JavaModule with ReleaseModule {
     override def pomDescription: String =
       "Mill Wrapper Jar downloads, installs, and launches target mill distribution as part of mill wrapper scripts run."
 
-    object itest extends CommonTestModule {}
+    object itest extends Tests with CommonTestModule {}
   }
 
-  object test extends CommonTestModule {}
+  object test extends Tests with CommonTestModule {}
 }
 
-object plugin
-    extends ScalaModule
-    with ReleaseModule
-    with ScalafixModule
-    with ScalafmtModule {
+object plugin extends ScalaModule with ReleaseModule with ScalafixModule with ScalafmtModule {
 
   override def scalaVersion = scala213
 
@@ -110,11 +107,21 @@ trait ReleaseModule extends CiReleaseModule {
   )
 }
 
-trait CommonTestModule extends ScalaModule with TestModule {
-  def scalaVersion: T[String] = wrapperScalaVersion
+trait CommonTestModule extends TestModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"dev.zio::zio-test::2.0.1",
-    ivy"dev.zio::zio-test-sbt::2.0.1"
+    ivy"dev.zio::zio-test::2.0.2",
+    ivy"dev.zio::zio-test-sbt::2.0.2",
+    ivy"dev.zio::zio-test-magnolia::2.0.2"
   )
   def testFramework = "zio.test.sbt.ZTestFramework"
+}
+
+object V {
+  final case object dev {
+    final case object zio {
+      val Version = "2.0.2"
+      val zio = ivy"dev.zio::zio::$Version"
+
+    }
+  }
 }
