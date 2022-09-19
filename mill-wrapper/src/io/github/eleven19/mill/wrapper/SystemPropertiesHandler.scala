@@ -1,4 +1,4 @@
-package io.eleven19.mill.wrapper
+package io.github.eleven19.mill.wrapper
 
 import java.nio.file.{Files, Path}
 import java.util.Properties
@@ -17,11 +17,13 @@ object SystemPropertiesHandler {
     try
       properties.load(Files.newInputStream(propertiesFile))
     catch
-      case io: IOException => throw new RuntimeException( "Error when loading properties file=" + propertiesFile, io);
+      case io: IOException => throw new RuntimeException("Error when loading properties file=" + propertiesFile, io);
 
     properties.entrySet.asScala.foldLeft(Map.empty[String, String]) { (map, entry) =>
       SYSPROP_PATTERN.findFirstIn(entry.getKey.toString) match
-        case Some(value) if (!value.isEmpty) => map + (value -> entry.getKey.toString)
-        case _ => map
+      case Some(value)
+      if (!value.isEmpty)
+      => map + (value -> entry.getKey.toString)
+      case _ => map
     }
 }
